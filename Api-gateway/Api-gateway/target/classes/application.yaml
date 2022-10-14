@@ -1,0 +1,58 @@
+eureka:
+    instance:
+        hostname: localhost
+server:
+    port: 8999
+
+spring:
+    application:
+        name: API-GATEWAY
+        
+    cloud:
+        gateway:
+            routes:
+            -   id: customer
+                uri: lb://customer
+                predicates:
+                   - Path=/customer/**
+                filters:
+                   - name: CircuitBreaker
+                     args:
+                        name: customer-service
+                        fallbackuri: forward:/customerServiceFallback
+
+            -   id: order
+                uri: lb://order
+                predicates:
+                   - Path=/order/**
+                filters:
+                   - name: CircuitBreaker
+                     args:
+                        name: order-service
+                        fallbackuri: forward:/orderServiceFallback
+                
+                        
+            -   id: payment
+                uri: lb://payment
+                predicates:
+                   - Path=/payment/**
+                filters:
+                   - name: CircuitBreaker
+                     args:
+                        name: payment-service
+                        fallbackuri: forward:/paymentServiceFallback
+                
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMillieseconds: 5000
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream                     
